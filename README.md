@@ -6,4 +6,6 @@ Projeto pessoal que eu montei pra jogar com meus amigos numa pegada nostálgica 
 
 🌐 **Acesse o site aqui:** [https://felixsalmon.github.io/quiz-legal/](https://felixsalmon.github.io/quiz-legal/)
 
-https://github.com/felixsalmon/quiz-legal/demo.mp4
+<p align="center">
+  <img src="demo.gif" width="600px" alt="Demonstração do Quiz">
+</p>
