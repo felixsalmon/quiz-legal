@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Show Estilo Wii Final</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'Continuum';
+            src: url('continuum_bold.ttf') format('truetype'); 
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Continuum', 'Nunito', sans-serif;
+            background-color: #E8ECEF; 
+            overflow: hidden; 
+            user-select: none; 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M5.5 3.5 L5.5 19.5 L9.5 15.5 L13.5 21.5 L16.5 19.5 L12.5 13.5 L17.5 13.5 Z" fill="%23fff" stroke="%23555555" stroke-width="1.5" stroke-linejoin="round"/></svg>') 4 2, auto;
+        }
+
+        button, .wii-card, input, [onclick], a {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path d="M8 1C7.4 1 7 1.4 7 2V10C6.5 9.6 6 9.6 5.5 9.6C4.7 9.6 4 10.3 4 11.1C4 11.6 4.3 12.1 4.7 12.6L7.7 17C8.6 18.2 10 19 11.6 19H15.5C17.8 19 19.5 17.3 19.5 15V9.5C19.5 8.7 18.8 8 18 8C17.5 8 17.1 8.3 16.7 8.7C16.3 8.1 15.6 7.7 14.8 7.7C14.3 7.7 13.8 7.9 13.5 8.3C13 7.5 12 7 11 7C10.2 7 9.5 7.4 9 8V2C9 1.4 8.6 1 8 1Z" fill="%23fff" stroke="%23555555" stroke-width="1.5" stroke-linejoin="round"/></svg>') 10 2, pointer !important;
+        }
+
+        .wii-card {
+            background: #FFFFFF;
+            border: 3px solid #D1D5DB;
+            border-radius: 24px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05), inset 0 -4px 0 rgba(0,0,0,0.02);
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wii-card:hover {
+            transform: scale(1.05);
+            border-color: #00AEEF;
+            box-shadow: 0 12px 24px rgba(0, 174, 239, 0.15), inset 0 -4px 0 rgba(0, 174, 239, 0.05);
+        }
+
+        .wii-card:active {
+            transform: scale(0.98);
+        }
+
+        .wii-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 20px 20px 0 0;
+            pointer-events: none;
+        }
+
+        .text-wii-gray { color: #555555; }
+        .text-wii-blue { color: #00AEEF; }
+
+        .slide {
+            display: none;
+            opacity: 0;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .bg-grid {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        .wii-hud-btn {
+            background: radial-gradient(circle, #ffffff 0%, #e6e9ec 100%);
+            border: 6px solid #dadddf;
+            box-shadow: inset 0 4px 8px rgba(255,255,255,0.8), inset 0 -4px 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+        }
+        
+        .wii-hud-btn:hover {
+            border-color: #00AEEF;
+            box-shadow: inset 0 4px 8px rgba(255,255,255,0.8), inset 0 -4px 8px rgba(0,174,239,0.2), 0 0 15px rgba(0,174,239,0.4);
+        }
+        
+        .wii-hud-btn:active { transform: scale(0.95); }
+
+        .wii-btn-reveal {
+            background: linear-gradient(to bottom, #ffffff, #e2e8f0);
+            border: 4px solid #cbd5e1;
+            border-radius: 50px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1), inset 0 -4px 0 rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        .wii-btn-reveal:hover {
+            border-color: #00AEEF;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,174,239,0.2), inset 0 -4px 0 rgba(0,0,0,0.05);
+        }
+        .wii-btn-reveal:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-grid w-screen h-screen flex flex-col items-center justify-start pb-[120px] overflow-y-auto overflow-x-hidden">
+
+    <div id="slide-1" class="slide active flex-col items-center justify-center text-center p-8 w-full h-full pt-20 relative">
+        <div class="mb-12 relative animate-bounce" style="animation-duration: 3s;">
+            <i class="fa-solid fa-hand-pointer text-wii-blue text-6xl drop-shadow-md rotate-[-20deg]"></i>
+        </div>
+        <h1 class="text-6xl md:text-7xl font-black text-wii-gray mb-6 drop-shadow-sm tracking-tight">
+            BEM-VINDOS AO MEU<br><span class="text-wii-blue">GAME SHOW!</span>
+        </h1>
+        <p class="text-2xl text-gray-400 mb-16 font-semibold">
+            Preparem-se para testar seus conhecimentos.
+        </p>
+        <button onclick="playSound('click'); goToSlide('slide-2')" class="wii-card px-12 py-6 text-3xl font-bold text-wii-gray hover:text-wii-blue flex items-center gap-4 mx-auto">
+            <i class="fa-solid fa-play"></i> INICIAR JOGO
+        </button>
+    </div>
+
+    <div id="slide-2" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="mb-8 px-4 text-center">
+            <h2 class="text-4xl font-bold text-wii-gray tracking-tight">Menu de Seleção</h2>
+            <p class="text-lg text-gray-500 font-semibold mt-1">Escolha um minigame para jogar</p>
+        </div>
+
+        <div class="grid grid-cols-2 grid-rows-2 gap-6 md:gap-10 h-auto">
+            <div onclick="playSound('click'); goToSlide('slide-grid-chutometro')" class="wii-card flex flex-col items-center justify-start p-3 group">
+                <div class="w-full h-24 md:h-32 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center relative overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform shadow-inner">
+                    <i class="fa-solid fa-list-ol absolute top-2 right-3 text-white opacity-30 text-2xl"></i>
+                    <i class="fa-solid fa-brain text-white text-5xl drop-shadow-md"></i>
+                </div>
+                <span class="text-2xl md:text-3xl font-extrabold text-wii-gray text-center leading-tight">O<br>Chutômetro</span>
+            </div>
+
+            <div onclick="playSound('click'); goToSlide('slide-grid-vulto')" class="wii-card flex flex-col items-center justify-start p-3 group">
+                <div class="w-full h-24 md:h-32 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center relative overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform shadow-inner">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.2)_0%,transparent_70%)]"></div>
+                    <i class="fa-solid fa-user-secret text-gray-900 text-6xl drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]"></i>
+                </div>
+                <span class="text-2xl md:text-3xl font-extrabold text-wii-gray text-center leading-tight">Vulto<br>Suspeito</span>
+            </div>
+
+            <div onclick="playSound('click'); goToSlide('slide-grid-geometria')" class="wii-card flex flex-col items-center justify-start p-3 group">
+                <div class="w-full h-24 md:h-32 bg-gradient-to-br from-yellow-300 to-orange-500 rounded-xl flex items-center justify-center relative overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform shadow-inner">
+                    <i class="fa-solid fa-cube absolute bottom-2 right-4 text-white opacity-40 text-4xl"></i>
+                    <i class="fa-solid fa-shapes text-red-700 text-5xl drop-shadow-md -rotate-12"></i>
+                </div>
+                <span class="text-2xl md:text-3xl font-extrabold text-wii-gray text-center leading-tight">Geometria<br>Nerd</span>
+            </div>
+
+            <div onclick="playSound('click'); goToSlide('slide-grid-asset')" class="wii-card flex flex-col items-center justify-start p-3 group">
+                <div class="w-full h-24 md:h-32 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center relative overflow-hidden mb-4 group-hover:scale-[1.02] transition-transform shadow-inner">
+                    <i class="fa-solid fa-magnifying-glass absolute top-2 left-2 text-white opacity-20 text-4xl -rotate-12"></i>
+                    <i class="fa-solid fa-puzzle-piece text-white text-5xl drop-shadow-md"></i>
+                </div>
+                <span class="text-2xl md:text-3xl font-extrabold text-wii-gray text-center leading-tight">Cadê o<br>Resto?</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO GRID (1 a 6) -->
+    <div id="slide-grid-chutometro" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="flex items-center justify-center gap-4 mb-6 bg-white p-3 rounded-3xl border-2 border-gray-200 shadow-sm mx-auto w-fit px-12">
+            <i class="fa-solid fa-brain text-wii-blue text-3xl"></i>
+            <h2 class="text-3xl font-extrabold text-wii-gray">O Chutômetro</h2>
+        </div>
+        <div class="grid grid-cols-3 gap-6 flex-grow h-[55vh]">
+            <div class="flex flex-col gap-3">
+                <div class="bg-green-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-green-700">1 PONTO</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-1')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">1</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-2')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">2</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-orange-100 border-2 border-orange-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-orange-700">2 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-3')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">3</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-4')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">4</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-red-100 border-2 border-red-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-red-700">3 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-5')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">5</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-chutometro-6')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">6</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VULTO SUSPEITO GRID (1 a 6) -->
+    <div id="slide-grid-vulto" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="flex items-center justify-center gap-4 mb-6 bg-white p-3 rounded-3xl border-2 border-gray-200 shadow-sm mx-auto w-fit px-12">
+            <i class="fa-solid fa-user-secret text-wii-blue text-3xl"></i>
+            <h2 class="text-3xl font-extrabold text-wii-gray">Vulto Suspeito</h2>
+        </div>
+        <div class="grid grid-cols-3 gap-6 flex-grow h-[55vh]">
+            <div class="flex flex-col gap-3">
+                <div class="bg-green-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-green-700">1 PONTO</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-1')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">1</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-2')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">2</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-orange-100 border-2 border-orange-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-orange-700">2 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-3')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">3</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-4')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">4</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-red-100 border-2 border-red-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-red-700">3 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-5')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">5</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-vulto-6')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">6</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GEOMETRIA NERD GRID (1 a 6) -->
+    <div id="slide-grid-geometria" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="flex items-center justify-center gap-4 mb-6 bg-white p-3 rounded-3xl border-2 border-gray-200 shadow-sm mx-auto w-fit px-12">
+            <i class="fa-solid fa-shapes text-wii-blue text-3xl"></i>
+            <h2 class="text-3xl font-extrabold text-wii-gray">Geometria Nerd</h2>
+        </div>
+        <div class="grid grid-cols-3 gap-6 flex-grow h-[55vh]">
+            <div class="flex flex-col gap-3">
+                <div class="bg-green-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-green-700">1 PONTO</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-1')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">1</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-2')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">2</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-orange-100 border-2 border-orange-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-orange-700">2 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-3')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">3</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-4')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">4</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-red-100 border-2 border-red-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-red-700">3 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-5')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">5</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-geo-6')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">6</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CADE O RESTO GRID (1 a 6) -->
+    <div id="slide-grid-asset" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="flex items-center justify-center gap-4 mb-6 bg-white p-3 rounded-3xl border-2 border-gray-200 shadow-sm mx-auto w-fit px-12">
+            <i class="fa-solid fa-puzzle-piece text-wii-blue text-3xl"></i>
+            <h2 class="text-3xl font-extrabold text-wii-gray">Cadê o Resto?</h2>
+        </div>
+        <div class="grid grid-cols-3 gap-6 flex-grow h-[55vh]">
+            <div class="flex flex-col gap-3">
+                <div class="bg-green-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-green-700">1 PONTO</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-1')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">1</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-2')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-green-50 to-green-100 border-green-300 text-green-500 hover:scale-105 transition-all group font-black">2</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-orange-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-orange-700">2 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-3')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">3</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-4')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300 text-orange-500 hover:scale-105 transition-all group font-black">4</div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="bg-red-100 border-2 border-green-300 rounded-xl p-2 text-center shadow-sm"><h3 class="text-lg font-black text-red-700">3 PONTOS</h3></div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-5')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">5</div>
+                <div onclick="playSound('click'); openQuestion(this, 'slide-asset-6')" class="wii-card flex-grow flex items-center justify-center text-4xl bg-gradient-to-br from-red-50 to-red-100 border-red-300 text-red-600 hover:scale-105 transition-all group font-black">6</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CHUTOMETRO SLIDES (1 a 6) ================= -->
+    <script>
+        // Gerador automático dos 6 slides do Chutômetro no DOM via script para manter o código limpo, ou em HTML estático abaixo:
+    </script>
+    
+    <!-- CHUTOMETRO 1 -->
+    <div id="slide-chutometro-1" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-blue-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">Em Mega Man 2, qual Robot Master deixa a arma Metal Blade como recompensa quando é derrotado?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-1')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-1" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">Metal Man.</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">A Metal Blade é bem roubada, tão roubada que é a fraqueza do próprio Metal Man.</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 1 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/metal-man.gif" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 1 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO 2 -->
+    <div id="slide-chutometro-2" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-blue-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">Qual é o nome da inteligência artificial responsável pelos testes realizados por Chell em Portal?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-2')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-2" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">GLaDOS.</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">Mesmo a GLaDOS sendo uma robô assassina que tenta te matar durante praticamente o jogo inteiro, muita gente acha ela atraente... talvez eu também...</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 2 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/glados.gif" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 2 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO 3 -->
+    <div id="slide-chutometro-3" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-orange-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">No primeiro The Legend of Zelda, qual é o nome da versão mais poderosa da espada que Link pode obter?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-3')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-3" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">Magical Sword.</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">Eu não sei como que eu ia adivinhar que essa espada tá escondida debaixo de uma lápide.</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 3 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/swordlink.jpg" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 3 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO 4 -->
+    <div id="slide-chutometro-4" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-orange-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">Qual foi o primeiro jogo eletrônico em que Sonic apareceu antes de estrelar seu próprio jogo?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-4')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-4" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">Rad Mobile.</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">Se o Ícaro não conseguir responder essa... Carteirinha do Sonic revogada.</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 4 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/sonic no ridge racer.jpg" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 4 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO 5 -->
+    <div id="slide-chutometro-5" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-red-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">Qual a identidade de Roaring Knight?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-5')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-5" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">¯\_(ツ)_/¯</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">Eu acredito fielmente que é o Papyrus.</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 5 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/rk paps.png" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 5 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- CHUTOMETRO 6 -->
+    <div id="slide-chutometro-6" class="slide flex-col w-full h-full max-w-5xl mx-auto p-4 justify-center items-center relative">
+        <div class="w-full bg-white border-4 border-red-200 rounded-3xl p-12 flex flex-col items-center justify-center shadow-md mb-8">
+            <h2 class="text-3xl md:text-5xl font-black text-wii-gray text-center leading-relaxed">Quais são os nomes dos três Dreamers responsáveis por manter o Hollow Knight selado no Black Egg Temple?</h2>
+        </div>
+        <div class="absolute bottom-36 z-40">
+            <button onclick="playSound('success'); revealChutometro('slide-chutometro-exp-6')" class="wii-btn-reveal px-12 py-5 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> VER RESPOSTA</button>
+        </div>
+    </div>
+    <div id="slide-chutometro-exp-6" class="slide flex-col w-full h-full max-w-5xl mx-auto p-8 justify-center items-center">
+        <i class="fa-solid fa-circle-check text-green-500 text-8xl mb-6 drop-shadow-md"></i>
+        <h2 class="text-5xl font-black text-wii-gray mb-8">Herrah the Beast, Lurien the Watcher e Monomon the Teacher.</h2>
+        <div class="bg-white border-4 border-gray-200 rounded-3xl p-8 shadow-sm w-full text-center">
+            <p class="text-2xl text-gray-600 leading-relaxed font-semibold">Será que alguém acerta essa?</p>
+            
+            <!-- ⬇️⬇️ 📷 COLOQUE A IMAGEM DA RESPOSTA 6 AQUI 📷 ⬇️⬇️ -->
+            <img src="chutometro/hollow knight.jpg" class="mt-6 mx-auto max-w-full h-auto max-h-[25vh] rounded-xl shadow-md border-2 border-gray-200 object-contain" alt="Imagem Explicativa">
+            <!-- ⬆️⬆️ 📷 COLOQUE A IMAGEM DA RESPOSTA 6 AQUI 📷 ⬆️⬆️ -->
+            
+        </div>
+    </div>
+
+    <!-- ================= VULTO SUSPEITO SLIDES (1 a 6) ================= -->
+    <script>for(let i=1; i<=6; i++) {
+        // Bloco gerador conceitual para manter o HTML limpo abaixo
+    }</script>
+
+    <!-- VULTO 1 a 6 gerados diretamente -->
+    <div id="slide-vulto-1" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-1" src="vulto/steve harvey.webp" class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-1" onclick="playSound('success'); revealVulto('1')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-vulto-2" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-2" src="vulto/v1.webp" class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-2" onclick="playSound('success'); revealVulto('2')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-vulto-3" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-3" src="vulto/sonichu.png" class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-3" onclick="playSound('success'); revealVulto('3')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-vulto-4" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-4" src="vulto/morganfreeman.png  " class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-4" onclick="playSound('success'); revealVulto('4')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-vulto-5" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-5" src="vulto/makoto.webp" class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-5" onclick="playSound('success'); revealVulto('5')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-vulto-6" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <h2 class="text-4xl font-black text-wii-gray absolute top-8">Quem é?</h2>
+        <div class="w-[450px] h-[450px] mt-10 relative flex items-center justify-center drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]">
+            <img id="vulto-img-6" src="vulto/whiteknuckle.webp" class="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out brightness-0 sepia-[.5] hue-rotate-[200deg] saturate-[5]" alt="Vulto">
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-vulto-6" onclick="playSound('success'); revealVulto('6')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-eye text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <!-- ================= GEOMETRIA NERD SLIDES (1 a 6) ================= -->
+    <!-- (Para reutilizar espaço e manter o código enxuto, geramos macros HTML estáticas para 1 a 6) -->
+    <div id="slide-geo-1" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-1" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-wii-blue drop-shadow-sm uppercase">Kirby</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">Kirby's Dream Land </p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-1" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/kirby shape.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-1" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/kirby.webp" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-1" onclick="playSound('success'); revealGeometria('1')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-geo-2" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-2" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-wii-blue drop-shadow-sm uppercase">Shovel Knight</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">Shovel Knight</p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-2" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/shovel knight shape.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-2" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/shobel knight.webp" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-2" onclick="playSound('success'); revealGeometria('2')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-geo-3" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-3" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-orange-500 drop-shadow-sm uppercase">Buzz Bomber Badnik</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">Sonic The Hedgehog</p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-3" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/inimigo sonic shape.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-3" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/Inimigo Sonic.webp" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-3" onclick="playSound('success'); revealGeometria('3')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-geo-4" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-4" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-orange-500 drop-shadow-sm uppercase">Bomberman Preto</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">Bomber Boy</p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-4" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/bomberman preto shape.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-4" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/bomberman preto.webp" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-4" onclick="playSound('success'); revealGeometria('4')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-geo-5" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-5" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-red-500 drop-shadow-sm uppercase">Dummy</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">Undertale</p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-5" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/Dummy undertale.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-5" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/Dummy unrtale.webp" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-5" onclick="playSound('success'); revealGeometria('5')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <div id="slide-geo-6" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative overflow-hidden">
+        <div id="geom-header-6" class="absolute top-6 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-5xl font-black text-red-500 drop-shadow-sm uppercase">Mago FILHO DA PUTA</h2>
+            <p class="text-xl text-gray-500 font-bold mt-1 tracking-widest">EU ODEIO ESSE MAGO VTMNC (The Legend Of Zelda)</p>
+        </div>
+        <div class="relative w-full h-[60vh] mt-12">
+            <div id="geom-img-container-6" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out z-20 flex items-center justify-center bg-white border-4 border-gray-300 rounded-3xl shadow-md p-4">
+                <img src="shape/mago fdp shape.png" class="w-full h-full object-contain">
+            </div>
+            <div id="real-img-container-6" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] transition-all duration-1000 ease-in-out opacity-0 scale-75 z-10 flex items-center justify-center drop-shadow-xl">
+                <img src="shape/mago fdp.jpg" class="max-w-full max-h-full object-contain">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-geom-6" onclick="playSound('success'); revealGeometria('6')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-shapes text-wii-blue"></i> REVELAR</button>
+        </div>
+    </div>
+
+    <!-- ================= CADE O RESTO SLIDES (1 a 6) ================= -->
+    <div id="slide-asset-1" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-1" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">Minecraft</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-1" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/minecraft2.jpg" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-1" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/minecraft.avif" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-1" onclick="playSound('success'); revealAsset('1')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="slide-asset-2" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-2" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">Castle Crashers</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-2" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/castle crashers2.jpg" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-2" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/castle crashers.jpg" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-2" onclick="playSound('success'); revealAsset('2')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="slide-asset-3" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-3" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">The Witcher 3: Wild Hunt</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-3" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/the witcher2.jpg" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-3" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/the witcher.jpg" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-3" onclick="playSound('success'); revealAsset('3')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="slide-asset-4" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-4" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">Gravity Circuit</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-4" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/gravitycircuit2.jpg" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-4" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/gravitycircuit.JPG" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-4" onclick="playSound('success'); revealAsset('4')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="slide-asset-5" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-5" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">Pokémon Fire Red</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-5" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/pokemon fire red2.png" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-5" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/pokemon fire red.png" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-5" onclick="playSound('success'); revealAsset('5')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="slide-asset-6" class="slide flex-col w-full h-full max-w-6xl mx-auto p-4 justify-center items-center relative">
+        <div id="asset-header-6" class="absolute top-10 text-center opacity-0 transition-opacity duration-1000 z-10 w-full">
+            <h2 class="text-4xl font-black text-wii-gray uppercase">Cuphead</h2>
+        </div>
+        <div class="w-full h-[55vh] mt-12 relative flex items-center justify-center">
+            <div id="asset-img-container-6" class="absolute z-20 transition-all duration-700 ease-in-out w-[280px] h-[280px] bg-white border-4 border-gray-300 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                <img src="zoom/cuphead2.jpg" class="object-cover w-full h-full">
+            </div>
+            <div id="full-img-container-6" class="absolute z-10 w-[750px] h-[420px] transition-all duration-1000 ease-in-out opacity-0 scale-90 border-8 border-white rounded-3xl shadow-2xl overflow-hidden">
+                <img src="zoom/cuphead.avif" class="w-full h-full object-cover">
+            </div>
+        </div>
+        <div class="absolute bottom-32 z-40">
+            <button id="btn-rev-asset-6" onclick="playSound('success'); revealAsset('6')" class="wii-btn-reveal px-10 py-4 text-3xl font-black text-wii-gray flex items-center gap-4"><i class="fa-solid fa-magnifying-glass text-wii-blue"></i> MOSTRAR JOGO</button>
+        </div>
+    </div>
+
+    <!-- ================= PLACAR GERAL (Slide 4) ================= -->
+    <div id="slide-4" class="slide flex-col w-full h-full max-w-6xl mx-auto p-8 justify-center">
+        <div class="mb-8 px-4 text-center">
+            <h2 class="text-4xl font-bold text-wii-gray tracking-tight">Placar Geral</h2>
+            <p class="text-lg text-gray-500 font-semibold mt-1">Gerencie os pontos dos jogadores ao vivo</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 flex-grow h-[50vh]">
+            <!-- Jogador 1 -->
+            <div class="relative">
+                <div class="wii-card flex flex-col items-center justify-between p-6 bg-white border-4 border-blue-200 h-full">
+                    <input type="file" id="photo-upload-0" accept="image/*" class="hidden" onchange="loadPhoto(event, 0)">
+                    <div onclick="playSound('click'); document.getElementById('photo-upload-0').click()" class="w-16 h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl mb-2 flex items-center justify-center text-gray-300 relative overflow-hidden cursor-pointer hover:border-blue-400 group transition-colors" title="Clique para adicionar foto">
+                        <i id="icon-player-0" class="fa-solid fa-user text-2xl group-hover:scale-110 transition-transform"></i>
+                        <img id="img-player-0" class="absolute inset-0 w-full h-full object-cover hidden" src="">
+                    </div>
+                    <input type="text" value="Jogador 1" class="text-xl font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full w-full text-center outline-none focus:ring-2 focus:ring-blue-400 transition-all border-2 border-transparent focus:border-blue-300">
+                    <div class="text-8xl font-black text-wii-gray my-4" id="score-0">0</div>
+                    <div class="flex gap-4 w-full relative z-10">
+                        <button onclick="playSound('click'); changeScore(0, -1)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-3xl py-2 rounded-xl transition-colors">-</button>
+                        <button onclick="playSound('click'); changeScore(0, 1)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-600 font-bold text-3xl py-2 rounded-xl transition-colors">+</button>
+                    </div>
+                </div>
+                <div class="absolute -bottom-6 -right-4 z-30 pointer-events-none animate-[bounce_2s_infinite] rotate-[-15deg]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="75" height="75" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.3));">
+                        <path d="M8 1C7.4 1 7 1.4 7 2V10C6.5 9.6 6 9.6 5.5 9.6C4.7 9.6 4 10.3 4 11.1C4 11.6 4.3 12.1 4.7 12.6L7.7 17C8.6 18.2 10 19 11.6 19H15.5C17.8 19 19.5 17.3 19.5 15V9.5C19.5 8.7 18.8 8 18 8C17.5 8 17.1 8.3 16.7 8.7C16.3 8.1 15.6 7.7 14.8 7.7C14.3 7.7 13.8 7.9 13.5 8.3C13 7.5 12 7 11 7C10.2 7 9.5 7.4 9 8V2C9 1.4 8.6 1 8 1Z" fill="#ffffff" stroke="#3b82f6" stroke-width="1.5" stroke-linejoin="round"></path>
+                        <text x="12" y="15" font-family="Arial, sans-serif" font-weight="900" font-size="8" fill="#3b82f6" text-anchor="middle">1</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Jogador 2 -->
+            <div class="relative">
+                <div class="wii-card flex flex-col items-center justify-between p-6 bg-white border-4 border-red-200 h-full">
+                    <input type="file" id="photo-upload-1" accept="image/*" class="hidden" onchange="loadPhoto(event, 1)">
+                    <div onclick="playSound('click'); document.getElementById('photo-upload-1').click()" class="w-16 h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl mb-2 flex items-center justify-center text-gray-300 relative overflow-hidden cursor-pointer hover:border-red-400 group transition-colors" title="Clique para adicionar foto">
+                        <i id="icon-player-1" class="fa-solid fa-user text-2xl group-hover:scale-110 transition-transform"></i>
+                        <img id="img-player-1" class="absolute inset-0 w-full h-full object-cover hidden" src="">
+                    </div>
+                    <input type="text" value="Jogador 2" class="text-xl font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full w-full text-center outline-none focus:ring-2 focus:ring-red-400 transition-all border-2 border-transparent focus:border-red-300">
+                    <div class="text-8xl font-black text-wii-gray my-4" id="score-1">0</div>
+                    <div class="flex gap-4 w-full relative z-10">
+                        <button onclick="playSound('click'); changeScore(1, -1)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-3xl py-2 rounded-xl transition-colors">-</button>
+                        <button onclick="playSound('click'); changeScore(1, 1)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-600 font-bold text-3xl py-2 rounded-xl transition-colors">+</button>
+                    </div>
+                </div>
+                <div class="absolute -bottom-8 -right-2 z-30 pointer-events-none animate-[bounce_2.5s_infinite] rotate-[-5deg]" style="animation-delay: 0.5s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="75" height="75" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.3));">
+                        <path d="M8 1C7.4 1 7 1.4 7 2V10C6.5 9.6 6 9.6 5.5 9.6C4.7 9.6 4 10.3 4 11.1C4 11.6 4.3 12.1 4.7 12.6L7.7 17C8.6 18.2 10 19 11.6 19H15.5C17.8 19 19.5 17.3 19.5 15V9.5C19.5 8.7 18.8 8 18 8C17.5 8 17.1 8.3 16.7 8.7C16.3 8.1 15.6 7.7 14.8 7.7C14.3 7.7 13.8 7.9 13.5 8.3C13 7.5 12 7 11 7C10.2 7 9.5 7.4 9 8V2C9 1.4 8.6 1 8 1Z" fill="#ffffff" stroke="#ef4444" stroke-width="1.5" stroke-linejoin="round"></path>
+                        <text x="12" y="15" font-family="Arial, sans-serif" font-weight="900" font-size="8" fill="#ef4444" text-anchor="middle">2</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Jogador 3 -->
+            <div class="relative">
+                <div class="wii-card flex flex-col items-center justify-between p-6 bg-white border-4 border-green-200 h-full">
+                    <input type="file" id="photo-upload-2" accept="image/*" class="hidden" onchange="loadPhoto(event, 2)">
+                    <div onclick="playSound('click'); document.getElementById('photo-upload-2').click()" class="w-16 h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl mb-2 flex items-center justify-center text-gray-300 relative overflow-hidden cursor-pointer hover:border-green-400 group transition-colors" title="Clique para adicionar foto">
+                        <i id="icon-player-2" class="fa-solid fa-user text-2xl group-hover:scale-110 transition-transform"></i>
+                        <img id="img-player-2" class="absolute inset-0 w-full h-full object-cover hidden" src="">
+                    </div>
+                    <input type="text" value="Jogador 3" class="text-xl font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full w-full text-center outline-none focus:ring-2 focus:ring-green-400 transition-all border-2 border-transparent focus:border-green-300">
+                    <div class="text-8xl font-black text-wii-gray my-4" id="score-2">0</div>
+                    <div class="flex gap-4 w-full relative z-10">
+                        <button onclick="playSound('click'); changeScore(2, -1)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-3xl py-2 rounded-xl transition-colors">-</button>
+                        <button onclick="playSound('click'); changeScore(2, 1)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-600 font-bold text-3xl py-2 rounded-xl transition-colors">+</button>
+                    </div>
+                </div>
+                <div class="absolute -bottom-5 -right-5 z-30 pointer-events-none animate-[bounce_2.2s_infinite] rotate-[-20deg]" style="animation-delay: 1s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="75" height="75" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.3));">
+                        <path d="M8 1C7.4 1 7 1.4 7 2V10C6.5 9.6 6 9.6 5.5 9.6C4.7 9.6 4 10.3 4 11.1C4 11.6 4.3 12.1 4.7 12.6L7.7 17C8.6 18.2 10 19 11.6 19H15.5C17.8 19 19.5 17.3 19.5 15V9.5C19.5 8.7 18.8 8 18 8C17.5 8 17.1 8.3 16.7 8.7C16.3 8.1 15.6 7.7 14.8 7.7C14.3 7.7 13.8 7.9 13.5 8.3C13 7.5 12 7 11 7C10.2 7 9.5 7.4 9 8V2C9 1.4 8.6 1 8 1Z" fill="#ffffff" stroke="#22c55e" stroke-width="1.5" stroke-linejoin="round"></path>
+                        <text x="12" y="15" font-family="Arial, sans-serif" font-weight="900" font-size="8" fill="#22c55e" text-anchor="middle">3</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Jogador 4 -->
+            <div class="relative">
+                <div class="wii-card flex flex-col items-center justify-between p-6 bg-white border-4 border-yellow-200 h-full">
+                    <input type="file" id="photo-upload-3" accept="image/*" class="hidden" onchange="loadPhoto(event, 3)">
+                    <div onclick="playSound('click'); document.getElementById('photo-upload-3').click()" class="w-16 h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl mb-2 flex items-center justify-center text-gray-300 relative overflow-hidden cursor-pointer hover:border-yellow-400 group transition-colors" title="Clique para adicionar foto">
+                        <i id="icon-player-3" class="fa-solid fa-user text-2xl group-hover:scale-110 transition-transform"></i>
+                        <img id="img-player-3" class="absolute inset-0 w-full h-full object-cover hidden" src="">
+                    </div>
+                    <input type="text" value="Jogador 4" class="text-xl font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full w-full text-center outline-none focus:ring-2 focus:ring-yellow-400 transition-all border-2 border-transparent focus:border-yellow-300">
+                    <div class="text-8xl font-black text-wii-gray my-4" id="score-3">0</div>
+                    <div class="flex gap-4 w-full relative z-10">
+                        <button onclick="playSound('click'); changeScore(3, -1)" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-3xl py-2 rounded-xl transition-colors">-</button>
+                        <button onclick="playSound('click'); changeScore(3, 1)" class="flex-1 bg-green-100 hover:bg-green-200 text-green-600 font-bold text-3xl py-2 rounded-xl transition-colors">+</button>
+                    </div>
+                </div>
+                <div class="absolute -bottom-7 -right-3 z-30 pointer-events-none animate-[bounce_2.8s_infinite] rotate-[-10deg]" style="animation-delay: 1.5s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="75" height="75" viewBox="0 0 24 24" style="filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.3));">
+                        <path d="M8 1C7.4 1 7 1.4 7 2V10C6.5 9.6 6 9.6 5.5 9.6C4.7 9.6 4 10.3 4 11.1C4 11.6 4.3 12.1 4.7 12.6L7.7 17C8.6 18.2 10 19 11.6 19H15.5C17.8 19 19.5 17.3 19.5 15V9.5C19.5 8.7 18.8 8 18 8C17.5 8 17.1 8.3 16.7 8.7C16.3 8.1 15.6 7.7 14.8 7.7C14.3 7.7 13.8 7.9 13.5 8.3C13 7.5 12 7 11 7C10.2 7 9.5 7.4 9 8V2C9 1.4 8.6 1 8 1Z" fill="#ffffff" stroke="#eab308" stroke-width="1.5" stroke-linejoin="round"></path>
+                        <text x="12" y="15" font-family="Arial, sans-serif" font-weight="900" font-size="8" fill="#eab308" text-anchor="middle">4</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botão de Encerrar Jogo -->
+        <div class="mt-12 w-full flex justify-center">
+            <button onclick="showPodium()" class="wii-btn-reveal bg-gradient-to-r from-red-500 to-pink-500 text-white border-red-400 px-12 py-4 text-2xl font-black flex items-center gap-4 hover:border-red-600 shadow-xl group">
+                <i class="fa-solid fa-trophy text-yellow-300 group-hover:scale-125 transition-transform"></i> ENCERRAR JOGO E VER RESULTADOS
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= RESULTADO FINAL (Slide Podio) ================= -->
+    <div id="slide-final" class="slide flex-col w-full h-full max-w-4xl mx-auto p-8 justify-center relative overflow-visible">
+        <div class="absolute inset-0 pointer-events-none overflow-hidden z-0 flex justify-center">
+            <!-- Confetes de Fundo -->
+            <div class="w-full h-full opacity-30 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTEwIDEwaDEwdjEwSDEweiIgZmlsbD0iI2Y1OTU5NSIvPjxwYXRoIGQ9Ik0zMCAyMGgxMHYxMEgzMHoiIGZpbGw9IiMzYjgyZjYiLz48cGF0aCBkPSJNMjAgMzBoMTB2MTBIMjB6IiBmaWxsPSIjMjJjNTVlIi8+PHBhdGggZD0iTTAgNDBoMTB2MTBIMHoiIGZpbGw9IiNlYWIzMDgiLz48L3N2Zz4=')]"></div>
+        </div>
+
+        <div class="mb-10 px-4 text-center relative z-10 mt-10">
+            <i class="fa-solid fa-crown text-yellow-400 text-6xl mb-4 drop-shadow-lg animate-bounce"></i>
+            <h2 class="text-6xl font-black text-wii-gray tracking-tight uppercase drop-shadow-md">Resultado Final</h2>
+            <p class="text-2xl text-gray-500 font-bold mt-2">Obrigado por jogar!</p>
+        </div>
+
+        <div id="podium-container" class="flex flex-col gap-4 w-full relative z-10 pb-20">
+            <!-- Pódio gerado via JS -->
+        </div>
+    </div>
+
+    <!-- Timer Widget -->
+    <div id="timer-container" class="fixed top-6 right-6 z-50 bg-white/90 backdrop-blur border-2 border-gray-300 rounded-2xl px-6 py-3 shadow-lg items-center gap-4 hidden">
+        <i class="fa-solid fa-stopwatch text-3xl text-wii-blue"></i>
+        <span id="timer-display" class="text-3xl font-black text-wii-gray tracking-wider">30</span>
+        <div class="flex flex-col gap-1">
+            <button onclick="startTimer(30)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-3 py-1 rounded-lg text-xs transition-colors">30s</button>
+            <button onclick="stopTimer()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold px-3 py-1 rounded-lg text-xs transition-colors">Zerar</button>
+        </div>
+    </div>
+
+    <!-- Wii HUD Footer -->
+    <div id="wii-hud" class="fixed bottom-0 left-0 w-full h-[120px] z-50 pointer-events-none transition-transform duration-500 ease-in-out translate-y-0">
+        <svg class="absolute bottom-0 w-full h-[120px] drop-shadow-[0_-4px_6px_rgba(0,0,0,0.08)]" preserveAspectRatio="none" viewBox="0 0 1000 120">
+            <path d="M0,35 L200,35 C280,35 320,85 400,85 L600,85 C680,85 720,35 800,35 L1000,35 L1000,120 L0,120 Z" fill="#dadddf" stroke="#00AEEF" stroke-width="4"></path>
+            <line x1="-50" y1="78" x2="230" y2="78" stroke="#b6bcbf" stroke-width="32" stroke-linecap="round" opacity="0.6"></line>
+            <line x1="770" y1="78" x2="1050" y2="78" stroke="#b6bcbf" stroke-width="32" stroke-linecap="round" opacity="0.6"></line>
+        </svg>
+
+        <div class="absolute bottom-0 w-full h-full pointer-events-auto flex justify-between items-end px-10 pb-4">
+            <div class="flex items-center gap-6">
+                <button onclick="playSound('click'); goToSlide('slide-1')" class="wii-hud-btn w-[88px] h-[88px] rounded-full flex items-center justify-center group relative z-10" title="Voltar ao Início">
+                    <i class="fa-solid fa-house text-4xl text-[#8b9298] group-hover:text-wii-blue drop-shadow-sm"></i>
+                </button>
+                <button onclick="playSound('click'); goToSlide('slide-2')" class="wii-hud-btn w-[88px] h-[88px] rounded-full flex items-center justify-center group relative z-10" title="Menu de Categorias">
+                    <span class="text-3xl font-black text-[#8b9298] group-hover:text-wii-blue drop-shadow-sm tracking-tighter">Wii</span>
+                </button>
+                <div class="text-[#00AEEF] text-4xl opacity-80 mb-2"><i class="fa-solid fa-memory"></i></div>
+            </div>
+
+            <button onclick="playSound('click'); goToSlide('slide-4')" class="wii-hud-btn w-[88px] h-[88px] rounded-full flex items-center justify-center group relative z-10" title="Placar Geral">
+                <i class="fa-solid fa-users text-4xl text-[#8b9298] group-hover:text-wii-blue drop-shadow-sm"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Controller -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            let now = audioCtx.currentTime;
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(300, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        let timerInterval = null;
+        function startTimer(seconds) {
+            stopTimer();
+            let timeLeft = seconds;
+            const display = document.getElementById('timer-display');
+            display.innerText = timeLeft;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                display.innerText = timeLeft;
+                playSound('tick');
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    playSound('success');
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('timer-display').innerText = "30";
+        }
+
+        let currentCube = null;
+        function goToSlide(slideId) {
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            document.getElementById(slideId).classList.add('active');
+
+            const hud = document.getElementById('wii-hud');
+            if (slideId === 'slide-1') {
+                hud.classList.add('translate-y-[120%]');
+                hud.classList.remove('translate-y-0');
+            } else {
+                hud.classList.remove('translate-y-[120%]');
+                hud.classList.add('translate-y-0');
+            }
+
+            const timerContainer = document.getElementById('timer-container');
+            const isQuestion = (slideId.startsWith('slide-chutometro-') || slideId.startsWith('slide-vulto-') || slideId.startsWith('slide-geo-') || slideId.startsWith('slide-asset-')) && !slideId.includes('-exp-');
+            
+            if (isQuestion) {
+                timerContainer.classList.remove('hidden');
+                timerContainer.classList.add('flex');
+            } else {
+                timerContainer.classList.add('hidden');
+                timerContainer.classList.remove('flex');
+                stopTimer();
+            }
+        }
+
+        function openQuestion(element, targetSlide) {
+            currentCube = element;
+            goToSlide(targetSlide);
+        }
+
+        function markCubeAsDone() {
+            if(currentCube) {
+                currentCube.className = "wii-card flex-grow flex items-center justify-center text-4xl bg-gray-200 border-gray-300 text-green-500 opacity-60 font-black";
+                currentCube.innerHTML = '<i class="fa-solid fa-check drop-shadow-md"></i>';
+                currentCube.style.pointerEvents = 'none'; 
+                currentCube = null; 
+            }
+        }
+
+        function loadPhoto(event, playerIndex) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgElement = document.getElementById(`img-player-${playerIndex}`);
+                    const iconElement = document.getElementById(`icon-player-${playerIndex}`);
+                    imgElement.src = e.target.result;
+                    imgElement.classList.remove('hidden');
+                    iconElement.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        let scores = [0, 0, 0, 0];
+        function changeScore(playerIndex, change) {
+            scores[playerIndex] += change;
+            const scoreElement = document.getElementById(`score-${playerIndex}`);
+            scoreElement.innerText = scores[playerIndex];
+            
+            scoreElement.classList.remove('scale-110', 'text-wii-blue');
+            void scoreElement.offsetWidth; 
+            scoreElement.classList.add('scale-110', 'text-wii-blue', 'transition-transform');
+            setTimeout(() => scoreElement.classList.remove('scale-110', 'text-wii-blue'), 200);
+        }
+
+        function revealChutometro(targetExp) {
+            markCubeAsDone();
+            goToSlide(targetExp);
+        }
+
+        function revealVulto(idSuffix) {
+            markCubeAsDone();
+            document.getElementById(`vulto-img-${idSuffix}`).classList.remove('brightness-0', 'sepia-[.5]', 'hue-rotate-[200deg]', 'saturate-[5]');
+            document.getElementById(`btn-rev-vulto-${idSuffix}`).classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function revealGeometria(idSuffix) {
+            markCubeAsDone();
+            const geomImg = document.getElementById(`geom-img-container-${idSuffix}`);
+            const realImg = document.getElementById(`real-img-container-${idSuffix}`);
+            const header = document.getElementById(`geom-header-${idSuffix}`);
+            const btn = document.getElementById(`btn-rev-geom-${idSuffix}`);
+
+            geomImg.classList.replace('left-1/2', 'left-1/4');
+            geomImg.classList.add('scale-75'); 
+            realImg.classList.replace('left-1/2', 'left-[75%]'); 
+            realImg.classList.remove('opacity-0', 'scale-75'); 
+            header.classList.remove('opacity-0');
+            btn.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function revealAsset(idSuffix) {
+            markCubeAsDone();
+            const assetImg = document.getElementById(`asset-img-container-${idSuffix}`);
+            const fullImg = document.getElementById(`full-img-container-${idSuffix}`);
+            const header = document.getElementById(`asset-header-${idSuffix}`);
+            const btn = document.getElementById(`btn-rev-asset-${idSuffix}`);
+
+            assetImg.classList.add('opacity-0', 'scale-50');
+            fullImg.classList.remove('opacity-0', 'scale-90');
+            fullImg.classList.add('scale-100');
+            header.classList.remove('opacity-0');
+            btn.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function showPodium() {
+            playSound('success');
+            
+            // Efeito de confetes nas cores dos jogadores
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#3b82f6', '#ef4444', '#22c55e', '#eab308']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#3b82f6', '#ef4444', '#22c55e', '#eab308']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+            
+            // Pega os nomes digitados nos inputs
+            const nameInputs = document.querySelectorAll('#slide-4 input[type="text"]');
+            
+            // Cria um array de objetos com os dados dos jogadores e verifica se tem foto
+            let players = [
+                { id: 1, name: nameInputs[0].value || 'Jogador 1', score: scores[0], color: 'blue-500', photo: document.getElementById('img-player-0').src, hasPhoto: !document.getElementById('img-player-0').classList.contains('hidden') },
+                { id: 2, name: nameInputs[1].value || 'Jogador 2', score: scores[1], color: 'red-500', photo: document.getElementById('img-player-1').src, hasPhoto: !document.getElementById('img-player-1').classList.contains('hidden') },
+                { id: 3, name: nameInputs[2].value || 'Jogador 3', score: scores[2], color: 'green-500', photo: document.getElementById('img-player-2').src, hasPhoto: !document.getElementById('img-player-2').classList.contains('hidden') },
+                { id: 4, name: nameInputs[3].value || 'Jogador 4', score: scores[3], color: 'yellow-500', photo: document.getElementById('img-player-3').src, hasPhoto: !document.getElementById('img-player-3').classList.contains('hidden') }
+            ];
+            
+            // Ordena os jogadores pela pontuação (do maior pro menor)
+            players.sort((a, b) => b.score - a.score);
+            
+            const podiumContainer = document.getElementById('podium-container');
+            podiumContainer.innerHTML = '';
+            
+            // Icones e cores para os pódios
+            const medals = [
+                '<i class="fa-solid fa-trophy text-yellow-400 drop-shadow-md"></i>', 
+                '<i class="fa-solid fa-medal text-gray-400 drop-shadow-sm"></i>', 
+                '<i class="fa-solid fa-award text-amber-600 drop-shadow-sm"></i>', 
+                '<i class="fa-solid fa-poop text-stone-400"></i>'
+            ];
+            
+            players.forEach((p, index) => {
+                let place = index + 1;
+                
+                // Destaque maior para o primeiro colocado
+                let extraClasses = index === 0 
+                    ? 'scale-105 border-yellow-400 shadow-[0_10px_25px_rgba(250,204,21,0.4)] z-20 bg-gradient-to-r from-yellow-50 to-white' 
+                    : 'scale-100 border-gray-300 shadow-md bg-white hover:scale-[1.02]';
+                
+                let textColor = index === 0 ? 'text-yellow-600' : 'text-gray-600';
+                
+                // Exibe a foto no pódio se o usuário tiver feito upload
+                let photoHTML = p.hasPhoto 
+                    ? `<img src="${p.photo}" class="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover border-2 border-gray-200 shadow-sm ml-2">` 
+                    : '';
+
+                podiumContainer.innerHTML += `
+                    <div class="wii-card flex items-center justify-between px-8 py-5 rounded-2xl border-4 transition-transform duration-300 ${extraClasses}">
+                        <div class="flex items-center gap-6">
+                            <div class="text-4xl md:text-5xl font-black text-gray-300 w-16 text-center">${place}º</div>
+                            <div class="text-4xl md:text-5xl w-12 text-center">${medals[index]}</div>
+                            ${photoHTML}
+                            <div class="text-2xl md:text-4xl font-extrabold ${textColor} uppercase tracking-wide truncate max-w-[250px]">${p.name}</div>
+                        </div>
+                        <div class="text-4xl md:text-6xl font-black text-${p.color} drop-shadow-sm flex items-baseline gap-2">
+                            ${p.score} <span class="text-lg md:text-2xl text-gray-400 font-bold">pts</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            goToSlide('slide-final');
+        }
+    </script>
+
+</body>
+</html>
