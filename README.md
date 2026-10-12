@@ -7,5 +7,5 @@ Projeto pessoal que eu montei pra jogar com meus amigos numa pegada nostálgica 
 🌐 **Acesse o site aqui:** [https://felixsalmon.github.io/quiz-legal/](https://felixsalmon.github.io/quiz-legal/)
 
 <p align="center">
-  <video src="video/video para mostrar.mp4" autoplay loop muted playsinline width="600px"></video>
+  <video src="video/demo.mp4" autoplay loop muted playsinline width="600px"></video>
 </p>
